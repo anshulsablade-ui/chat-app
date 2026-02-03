@@ -28,23 +28,45 @@ $('body').on('click', '.chatUser', function (e) {
     });
 });
 
-$("#messageSendForm").submit(function (e) { 
-    e.preventDefault();
-    let formData = new FormData(this);
-    let url = $(this).attr('action');
-    ajaxCall(url, 'post', formData, function (response) {
-        $('.main').html(response);
-    }, function (response) {
-        alert('Error:' + response);
-        // console.log(response);
-    });
-});
+// $("#messageSendForm").submit(function (e) { 
+//     e.preventDefault();
+//     let formData = new FormData(this);
+//     let url = $(this).attr('action');
+//     ajaxCall(url, 'post', formData, function (response) {
+//         $('.main').html(response);
+//     }, function (response) {
+//         alert('Error:' + response);
+//         // console.log(response);
+//     });
+// });
+
+// Echo.join('online')
+//     .here((users) => {
+//         users.forEach(user => setOnline(user.id));
+//     })
+//     .joining((user) => {
+//         setOnline(user.id);
+//     })
+//     .leaving((user) => {
+//         setOffline(user.id);
+//     });
 
 
-Echo.join(`chat.${roomId}`)
-    .here(/* ... */)
-    .joining(/* ... */)
-    .leaving(/* ... */)
-    .listen('NewMessage', (e) => {
-        // ...
-    });
+// function setOnline(userId) {
+//     $(`#user-${userId} .status`).removeClass('avatar-offline');
+//     $(`#user-${userId} .status`).addClass('avatar-online');
+// }
+
+// function setOffline(userId) {
+//     $(`#user-${userId} .status`).removeClass('avatar-online');
+//     $(`#user-${userId} .status`).addClass('avatar-offline');
+// }
+
+
+// Echo.join(`chat.${roomId}`)
+//     .here(/* ... */)
+//     .joining(/* ... */)
+//     .leaving(/* ... */)
+//     .listen('NewMessage', (e) => {
+//         // ...
+//     });

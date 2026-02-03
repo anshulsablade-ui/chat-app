@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable
 {
@@ -46,4 +47,34 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    protected function image(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) =>
+            $value ? asset('images/users/' . $value) : null
+        );
+    }
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) =>
+            $value ? ucfirst($value) : null,
+
+            set: fn(?string $value) =>
+            $value ? strtolower($value) : null
+        );
+    }
+
+    public function conversation_participants()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
 }

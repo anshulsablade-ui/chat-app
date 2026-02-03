@@ -39,7 +39,7 @@
                                         <!-- Title -->
 
                                         <!-- Toolbar -->
-                                        <div class="col-xl-6 d-none d-xl-block">
+                                        {{-- <div class="col-xl-6 d-none d-xl-block">
                                             <div class="row align-items-center justify-content-end gx-6">
                                                 <div class="col-auto">
                                                     <a href="#" class="icon icon-lg text-muted" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-more" aria-controls="offcanvas-more">
@@ -59,7 +59,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                         <!-- Toolbar -->
                                     </div>
                                 </div>
@@ -80,24 +80,29 @@
                         <!-- Chat: Content -->
                         <div class="chat-body hide-scrollbar flex-1 h-100">
                             <div class="chat-body-inner">
-                                <div class="py-6 py-lg-12">
+                                <div class="py-6 py-lg-12" id="messages-content">
 
                                     <!-- Divider -->
-                                    <div class="message-divider">
+                                    {{-- <div class="message-divider">
                                         <small class="text-muted">Friday, Sep 20</small>
-                                    </div>
+                                    </div> --}}
 
                                     <!-- Message -->
-                                    <div class="message">
+                                    @foreach ($messages as $message)
+                                    <div class="message {{ Auth::user()->id == $message->sender_id ? 'message-out' : '' }}">
                                         <a href="#" data-bs-toggle="modal" data-bs-target="#modal-user-profile" class="avatar avatar-responsive">
-                                            <img class="avatar-img" src="assets/img/avatars/2.jpg" alt="">
+                                            @if (file_exists($message->sender->image))
+                                                <img src="{{ $message->sender->image }}" alt="{{ $message->sender->name }}" class="avatar-img">
+                                            @else
+                                                <span class="avatar-text">{{ substr($message->sender->name, 0, 1) }}</span>
+                                            @endif
                                         </a>
 
                                         <div class="message-inner">
                                             <div class="message-body">
                                                 <div class="message-content">
                                                     <div class="message-text">
-                                                        <p>Hey, Marshall! How are you? Can you please change the color theme of the website to pink and purple?</p>
+                                                        <p>{{ $message->message }}</p>
                                                     </div>
 
                                                     <!-- Dropdown -->
@@ -142,13 +147,14 @@
                                             </div>
 
                                             <div class="message-footer">
-                                                <span class="extra-small text-muted">08:45 PM</span>
+                                                <span class="extra-small text-muted">{{ $message->created_at->format('H:i A') }}</span>
                                             </div>
                                         </div>
                                     </div>
+                                    @endforeach
 
                                     <!-- Message -->
-                                    <div class="message message-out">
+                                    {{-- <div class="message message-out">
                                         <a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile" class="avatar avatar-responsive">
                                             <img class="avatar-img" src="assets/img/avatars/1.jpg" alt="">
                                         </a>
@@ -205,7 +211,7 @@
                                                 <span class="extra-small text-muted">08:45 PM</span>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> --}}
 
                                 </div>
                             </div>
@@ -220,8 +226,8 @@
                             <!-- Chat: Files -->
 
                             <!-- Chat: Form -->
-                            <form id="messageSendForm" action="{{ route('chat.send') }}" class="chat-form rounded-pill bg-dark" data-emoji-form="">
-                                <input type="hidden" name="conversation_id" value="{{ $receiver->id }}">
+                            <form id="messageSendForm" class="chat-form rounded-pill bg-dark" data-emoji-form="">
+                                <input type="hidden" name="conversation_id" value="1">
                                 <div class="row align-items-center gx-0">
                                     <div class="col-auto">
                                         <a href="#" class="btn btn-icon btn-link text-body rounded-circle" id="dz-btn">

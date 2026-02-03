@@ -18,6 +18,8 @@
     <link class="css-lt" rel="stylesheet" href="{{ asset('assets/css/template.bundle.css') }}" media="(prefers-color-scheme: light)">
     <link class="css-dk" rel="stylesheet" href="{{ asset('assets/css/template.dark.bundle.css') }}" media="(prefers-color-scheme: dark)">
 
+    <!-- Script -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Theme mode -->
     <script>
             if (localStorage.getItem('color-scheme')) {
@@ -41,7 +43,7 @@
         <!-- Layout -->
         <div class="layout overflow-hidden">
             <!-- Navigation -->
-            <nav class="navigation d-flex flex-column text-center navbar navbar-light hide-scrollbar">
+            {{-- <nav class="navigation d-flex flex-column text-center navbar navbar-light hide-scrollbar">
                 <!-- Brand -->
                 <a href="index-2.html" title="Messenger" class="d-none d-xl-block mb-6">
                     <svg version="1.1" width="46px" height="46px" fill="currentColor" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 46 46" enable-background="new 0 0 46 46" xml:space="preserve">
@@ -136,7 +138,7 @@
                         </a>
                     </li>
                 </ul>
-            </nav>
+            </nav> --}}
             <!-- Navigation -->
 
             <!-- Sidebar -->
@@ -674,7 +676,7 @@
                                     </div>
 
                                     <!-- Search -->
-                                    <div class="mb-6">
+                                    {{-- <div class="mb-6">
                                         <form action="#">
                                             <div class="input-group">
                                                 <div class="input-group-text">
@@ -686,17 +688,17 @@
                                                 <input type="text" class="form-control form-control-lg ps-0" placeholder="Search messages or users" aria-label="Search for messages or users...">
                                             </div>
                                         </form>
-                                    </div>
+                                    </div> --}}
 
                                     <!-- Chats -->
                                     <div class="card-list">
                                         @foreach ($users as $user)    
                                         <!-- Card -->
-                                        <a href="{{ route('chat', $user->id) }}" class="card border-0 text-reset chatUser">
-                                            <div class="card-body">
+                                        <a href="{{ route('chat', $user->id) }}" data-conversation-id="" class="card border-0 text-reset chatUser">
+                                            <div class="card-body" id="user-{{ $user->id }}">
                                                 <div class="row gx-5">
                                                     <div class="col-auto">
-                                                        <div class="avatar avatar-online">
+                                                        <div class="avatar status {{ now()->diffInMinutes($user->last_seen) < 2 ? 'avatar-online' : 'avatar-offline' }}">
                                                             @if ($user->image)
                                                                 <img src="{{ asset('images/users/' . $user->image) }}" alt="{{ $user->name }}" class="avatar-img">
                                                             @else
@@ -1057,7 +1059,8 @@
             <!-- Sidebar -->
 
             <!-- Chat -->
-            <main class="main">
+            @include('component.chat')
+            {{-- <main class="main">
                 <div class="container h-100">
 
                     <div class="d-flex flex-column h-100 justify-content-center text-center">
@@ -1071,7 +1074,7 @@
                     </div>
 
                 </div>
-            </main>
+            </main> --}}
             <!-- Chat -->
 
         </div>
@@ -1461,5 +1464,134 @@
         <script src="{{ asset('assets/js/template.js') }}"></script>
         <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
         <script src="{{ asset('assets/js/ajax.js') }}"></script>
+
+        
+        <script>
+            $(document).ready(function () {
+
+                $("#messageSendForm").submit(function (e) {
+                    e.preventDefault();
+                    let formData = new FormData(this);
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('chat.send') }}",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {  
+                            showMessage(response.message);
+                        }
+                    });
+                });
+
+
+                Echo.join('online')
+                    .here((users) => {
+                        users.forEach(user => setOnline(user.id));
+                    })
+                    .joining((user) => {
+                        setOnline(user.id);
+                    })
+                    .leaving((user) => {
+                        setOffline(user.id);
+                    });
+
+                function setOnline(userId) {
+                    $(`#user-${userId} .status`).removeClass('avatar-offline');
+                    $(`#user-${userId} .status`).addClass('avatar-online');
+                }
+
+                function setOffline(userId) {
+                    $(`#user-${userId} .status`).removeClass('avatar-online');
+                    $(`#user-${userId} .status`).addClass('avatar-offline');
+                }
+
+                const userId = "{{ Auth::user()->id }}";
+                Echo.private('chat.1')
+                    .listen('.message.sent', (e) => {
+                        showMessage(e);
+                    });
+
+                function showMessage(message) {
+                    // ${$message->sender->image ? '<img src="' . $message->sender->image . '" alt="' . $message->sender->name . '" class="avatar-img">' : '<span class="avatar-text">' . substr($message->sender->name, 0, 1) . '</span>'}
+                    let content = `<div class="message ${message.sender_id == userId ? 'message-out' : ''}">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile" class="avatar avatar-responsive">
+                                            ${message.sender && message.sender.image
+                                                ? `<img src="${message.sender.image}" alt="${message.sender.name}" class="avatar-img">`
+                                                : `<span class="avatar-text">${message.sender?.name?.charAt(0) ?? '?'}</span>`
+                                            }
+                                        </a>
+
+                                        <div class="message-inner">
+                                            <div class="message-body">
+                                                <div class="message-content">
+                                                    <div class="message-text">
+                                                        <p>${message.message}</p>
+                                                    </div>
+
+                                                    <!-- Dropdown -->
+                                                    <div class="message-action">
+                                                        <div class="dropdown">
+                                                            <a class="icon text-muted" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                                            </a>
+
+                                                            <ul class="dropdown-menu">
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="#">
+                                                                        <span class="me-auto">Edit</span>
+                                                                        <div class="icon">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-3"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                                                        </div>
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="#">
+                                                                        <span class="me-auto">Reply</span>
+                                                                        <div class="icon">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-up-left"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>
+                                                                        </div>
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <hr class="dropdown-divider">
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center text-danger" href="#">
+                                                                        <span class="me-auto">Delete</span>
+                                                                        <div class="icon">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                                                        </div>
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="message-footer">
+                                                <span class="extra-small text-muted">${formatTime(message.created_at)}</span>
+                                            </div>
+                                        </div>`;
+                    $("#messages-content").append(content);
+                }
+
+                function formatTime(datetime) {
+                    if (!datetime) return '';
+
+                    // Make it ISO-compatible for Safari also
+                    const date = new Date(datetime.replace(' ', 'T'));
+
+                    return date.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+
+
+            });
+        </script>
     </body>
 </html>
