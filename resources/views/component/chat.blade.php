@@ -21,7 +21,7 @@
                                         <div class="col-12 col-xl-6">
                                             <div class="row align-items-center gx-5">
                                                 <div class="col-auto">
-                                                    <div class="avatar avatar-online d-none d-xl-inline-block">
+                                                    <div class="avatar avatar-online1 d-none d-xl-inline-block">
                                                         @if ($user->image)
                                                             <img src="{{ asset('images/users/' . $user->image) }}" alt="{{ $user->name }}" class="avatar-img">
                                                         @else
@@ -79,7 +79,7 @@
 
                         <!-- Chat: Content -->
                         <div class="chat-body hide-scrollbar flex-1 h-100">
-                            <div class="chat-body-inner">
+                            <div class="chat-body-inner" style="padding-bottom: 87px">
                                 <div class="py-6 py-lg-12" id="messages-content">
 
                                     <!-- Divider -->

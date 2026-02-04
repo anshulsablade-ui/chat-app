@@ -698,7 +698,7 @@
                                             <div class="card-body" id="user-{{ $user->id }}">
                                                 <div class="row gx-5">
                                                     <div class="col-auto">
-                                                        <div class="avatar status {{ now()->diffInMinutes($user->last_seen) < 2 ? 'avatar-online' : 'avatar-offline' }}">
+                                                        <div class="avatar status avatar-offline">
                                                             @if ($user->image)
                                                                 <img src="{{ asset('images/users/' . $user->image) }}" alt="{{ $user->name }}" class="avatar-img">
                                                             @else
@@ -710,7 +710,7 @@
                                                     <div class="col">
                                                         <div class="d-flex align-items-center mb-3">
                                                             <h5 class="me-auto mb-0">{{ $user->name }}</h5>
-                                                            {{-- <span class="text-muted extra-small ms-2">08:35 PM</span> --}}
+                                                            <span class="text-muted extra-small ms-2">{{ $user->last_seen?->format('H:i A') }}</span>
                                                         </div>
 
                                                         {{-- <div class="d-flex align-items-center">
@@ -1059,8 +1059,8 @@
             <!-- Sidebar -->
 
             <!-- Chat -->
-            @include('component.chat')
-            {{-- <main class="main">
+            {{-- @include('component.chat') --}}
+            <main class="main" id="mainRemove">
                 <div class="container h-100">
 
                     <div class="d-flex flex-column h-100 justify-content-center text-center">
@@ -1069,12 +1069,138 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                             </span>
                         </div>
-
                         <p class="text-muted">Pick a person from left menu, <br> and start your conversation.</p>
+                    </div>
+                </div>
+            </main>
+            <main class="main is-visible d-none" data-dropzone-area="">
+                <div class="container h-100">
+
+                    <div class="d-flex flex-column h-100 position-relative">
+                        <!-- Chat: Header -->
+                        <div class="chat-header border-bottom py-4 py-lg-7">
+                            <div class="row align-items-center">
+
+                                <!-- Mobile: close -->
+                                <div class="col-2 d-xl-none">
+                                    <a class="icon icon-lg text-muted" href="#" data-toggle-chat="">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                    </a>
+                                </div>
+                                <!-- Mobile: close -->
+
+                                <!-- Content -->
+                                <div class="col-8 col-xl-12">
+                                    <div class="row align-items-center text-center text-xl-start">
+                                        <!-- Title -->
+                                        <div class="col-12 col-xl-6">
+                                            <div class="row align-items-center gx-5">
+                                                <div class="col-auto">
+                                                    <div class="avatar avatar-offline d-none user-status d-xl-inline-block user-avatar"></div>
+                                                </div>
+
+                                                <div class="col overflow-hidden">
+                                                    <h5 class="text-truncate user-name"></h5>
+                                                    <div id="typing-indicator">
+                                                        {{-- <p class="text-truncate">is typing<span class='typing-dots'><span>.</span><span>.</span><span>.</span></span></p> --}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Title -->
+
+                                        <!-- Toolbar -->
+                                        <div class="col-xl-6 d-none d-xl-block">
+                                            <div class="row align-items-center justify-content-end gx-6">
+                                                <div class="col-auto">
+                                                    <a href="#" class="icon icon-lg text-muted" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-more" aria-controls="offcanvas-more">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-horizontal"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                                                    </a>
+                                                </div>
+
+                                                <div class="col-auto">
+                                                    <div class="avatar-group">
+                                                        <a href="#" class="avatar avatar-sm user-avatar" data-bs-toggle="modal" data-bs-target="#modal-user-profile"></a>
+
+                                                        <a href="#" class="avatar avatar-sm" data-bs-toggle="modal" data-bs-target="#modal-profile">
+                                                            @if (file_exists(Auth::user()->image))
+                                                                <img src="{{ Auth::user()->image }}" alt="{{ Auth::user()->name }}" class="avatar-img">
+                                                            @else
+                                                                <span class="avatar-text">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                                            @endif
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Toolbar -->
+                                    </div>
+                                </div>
+                                <!-- Content -->
+
+                                <!-- Mobile: more -->
+                                <div class="col-2 d-xl-none text-end">
+                                    <a href="#" class="icon icon-lg text-muted" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-more" aria-controls="offcanvas-more">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                    </a>
+                                </div>
+                                <!-- Mobile: more -->
+
+                            </div>
+                        </div>
+                        <!-- Chat: Header -->
+
+                        <!-- Chat: Content -->
+                        <div class="chat-body hide-scrollbar flex-1 h-100">
+                            <div class="chat-body-inner">
+                                <div class="py-6 py-lg-12" id="messages-content"></div>
+                            </div>
+                        </div>
+                        <!-- Chat: Content -->
+
+                        <!-- Chat: Footer -->
+                        <div class="chat-footer pb-3 pb-lg-7 position-absolute bottom-0 start-0">
+                            <!-- Chat: Files -->
+                            <div class="dz-preview bg-dark" id="dz-preview-row" data-horizontal-scroll="">
+                            </div>
+                            <!-- Chat: Files -->
+
+                            <!-- Chat: Form -->
+                            <form id="messageSendForm" class="chat-form rounded-pill bg-dark" data-emoji-form="">
+                                <input type="hidden" name="conversation_id" id="conversation_id">
+                                <div class="row align-items-center gx-0">
+                                    <div class="col-auto">
+                                        <a href="#" class="btn btn-icon btn-link text-body rounded-circle" id="dz-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-paperclip"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                        </a>
+                                    </div>
+
+                                    <div class="col">
+                                        <div class="input-group">
+                                            <textarea id="message" class="form-control px-0" placeholder="Type your message..." name="message" rows="1" data-emoji-input="" data-autosize="true"></textarea>
+
+                                            <a href="#" class="input-group-text text-body pe-0" data-emoji-btn="">
+                                                <span class="icon icon-lg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-smile"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                                                </span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-auto">
+                                        <button class="btn btn-icon btn-primary rounded-circle ms-5">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <!-- Chat: Form -->
+                        </div>
+                        <!-- Chat: Footer -->
                     </div>
 
                 </div>
-            </main> --}}
+            </main>
             <!-- Chat -->
 
         </div>
@@ -1167,11 +1293,15 @@
 
                             <div class="profile-body">
                                 <div class="avatar avatar-xl">
-                                    <img class="avatar-img" src="assets/img/avatars/1.jpg" alt="#">
+                                    @if (file_exists(Auth::user()->image))
+                                        <img src="{{ Auth::user()->image }}" alt="{{ Auth::user()->name }}" class="avatar-img">
+                                    @else
+                                        <span class="avatar-text">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                    @endif
                                 </div>
 
-                                <h4 class="mb-1">William Wright</h4>
-                                <p>last seen 5 minutes ago</p>
+                                <h4 class="mb-1">{{ Auth::user()->name }}</h4>
+                                {{-- <p>last seen 5 minutes ago</p> --}}
                             </div>
                         </div>
                         <!-- Header -->
@@ -1183,23 +1313,8 @@
                             <li class="list-group-item">
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
-                                        <h5>Location</h5>
-                                        <p>USA, Houston</p>
-                                    </div>
-
-                                    <div class="col-auto">
-                                        <div class="btn btn-sm btn-icon btn-dark">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-globe"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li class="list-group-item">
-                                <div class="row align-items-center gx-6">
-                                    <div class="col">
                                         <h5>E-mail</h5>
-                                        <p>william@studio.com</p>
+                                        <p>{{ Auth::user()->email }}</p>
                                     </div>
 
                                     <div class="col-auto">
@@ -1214,7 +1329,7 @@
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
                                         <h5>Phone</h5>
-                                        <p>1-800-275-2273</p>
+                                        <p>{{ Auth::user()->phone ?? '-' }}</p>
                                     </div>
 
                                     <div class="col-auto">
@@ -1254,7 +1369,7 @@
                         <!-- List -->
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
-                                <a href="#" class="text-danger">Logout</a>
+                                <a href="{{ route('logout') }}" class="text-danger">Logout</a>
                             </li>
                         </ul>
                         <!-- List -->
@@ -1283,16 +1398,10 @@
                             </div>
 
                             <div class="profile-body">
-                                <div class="avatar avatar-xl">
-                                    <img class="avatar-img" src="assets/img/avatars/9.jpg" alt="#">
+                                <div class="avatar avatar-xl user-avatar"></div>
 
-                                    <a href="#" class="badge badge-lg badge-circle bg-primary text-white border-outline position-absolute bottom-0 end-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    </a>
-                                </div>
-
-                                <h4 class="mb-1">William Wright</h4>
-                                <p>last seen 5 minutes ago</p>
+                                <h4 class="mb-1 user-name"></h4>
+                                <p class="user-last-seen"></p>
                             </div>
                         </div>
                         <!-- Header -->
@@ -1304,23 +1413,8 @@
                             <li class="list-group-item">
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
-                                        <h5>Location</h5>
-                                        <p>USA, Houston</p>
-                                    </div>
-
-                                    <div class="col-auto">
-                                        <div class="btn btn-sm btn-icon btn-dark">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-globe"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li class="list-group-item">
-                                <div class="row align-items-center gx-6">
-                                    <div class="col">
                                         <h5>E-mail</h5>
-                                        <p>william@studio.com</p>
+                                        <p class="user-email"></p>
                                     </div>
 
                                     <div class="col-auto">
@@ -1335,7 +1429,7 @@
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
                                         <h5>Phone</h5>
-                                        <p>1-800-275-2273</p>
+                                        <p cl></p>
                                     </div>
 
                                     <div class="col-auto">
@@ -1465,13 +1559,60 @@
         <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
         <script src="{{ asset('assets/js/ajax.js') }}"></script>
 
-        
         <script>
+            let conversationId = null;
+            let USER_ID = null;
+            let USER_NAME = null;
             $(document).ready(function () {
+                $('body').on('click', '.chatUser', function (e) {
+                    e.preventDefault();
+                    let url = $(this).attr('href');
+                    ajaxCall(url, 'post', null, function (response) {
+                        $("#mainRemove").remove();
+                        $("#messages-content").empty();
+                        conversationId = JSON.stringify(response.conversationId);
+                        USER_ID = JSON.stringify(response.user.id);
+                        USER_NAME = JSON.stringify(response.user.name);
+
+                        $('#messageSendForm').find('#conversation_id').val(conversationId);
+                        joinConversation(conversationId);
+
+                        setUserDetails(response.user);
+                        $('.main').removeClass('d-none');
+                        $.each(response.messages, function (indexInArray, message) {
+                            showMessage(message);
+                        });
+                        // $('.main').html(response);
+                    }, function (response) {
+                        alert('Error:' + response);
+                        // console.log(response);
+                    });
+                });
+
+                function setUserDetails(user) {
+                    $(".user-avatar").html(  
+                        user.image && user.image
+                            ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
+                            : `<span class="avatar-text">${user?.name?.charAt(0) ?? '?'}</span>`
+                    );
+                    $(".user-name").text(user.name);
+                    $(".user-last-seen").text(user.last_seen);
+                    if (user.is_online) {
+                        $(".status").removeClass('avatar-offline');
+                        $(".status").addClass('avatar-online');
+                    } else {
+                        $(".status").removeClass('avatar-online');
+                        $(".status").addClass('avatar-offline');
+                    }
+
+                }
+
 
                 $("#messageSendForm").submit(function (e) {
                     e.preventDefault();
                     let formData = new FormData(this);
+                    hideTyping();
+                    $(this).find('#message').val('');
                     $.ajax({
                         type: "POST",
                         url: "{{ route('chat.send') }}",
@@ -1479,6 +1620,8 @@
                         processData: false,
                         contentType: false,
                         success: function (response) {  
+                            Echo.private(`chat.${conversationId}`)
+                                .whisper('stop-typing', { user_id: USER_ID });
                             showMessage(response.message);
                         }
                     });
@@ -1506,14 +1649,31 @@
                     $(`#user-${userId} .status`).addClass('avatar-offline');
                 }
 
+                // real time message show
                 const userId = "{{ Auth::user()->id }}";
-                Echo.private('chat.1')
-                    .listen('.message.sent', (e) => {
-                        showMessage(e);
-                    });
+
+                let currentConversationId = null;
+
+                function joinConversation(conversationId) {
+
+                    if (currentConversationId) {
+                        Echo.leave(`chat.${currentConversationId}`);
+                    }
+
+                    currentConversationId = conversationId;
+
+                    Echo.private(`chat.${conversationId}`)
+                        .listen('.message.sent', (e) => {
+                            showMessage(e);
+                        });
+                }
+
+                // Echo.private(`chat.${conversationId}`)
+                //     .listen('.message.sent', (e) => {
+                //         showMessage(e);
+                //     });
 
                 function showMessage(message) {
-                    // ${$message->sender->image ? '<img src="' . $message->sender->image . '" alt="' . $message->sender->name . '" class="avatar-img">' : '<span class="avatar-text">' . substr($message->sender->name, 0, 1) . '</span>'}
                     let content = `<div class="message ${message.sender_id == userId ? 'message-out' : ''}">
                                         <a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile" class="avatar avatar-responsive">
                                             ${message.sender && message.sender.image
@@ -1580,7 +1740,6 @@
                 function formatTime(datetime) {
                     if (!datetime) return '';
 
-                    // Make it ISO-compatible for Safari also
                     const date = new Date(datetime.replace(' ', 'T'));
 
                     return date.toLocaleTimeString('en-US', {
@@ -1589,6 +1748,70 @@
                         hour12: true
                     });
                 }
+
+
+                // typing handler
+                let typingTimer = null;
+
+                $("#message").on('input', function () {
+                    
+                    if (!conversationId) return;
+                    // console.log(conversationId);
+                    Echo.private(`chat.${conversationId}`)
+                        .whisper('typing', {
+                            user_id: USER_ID,
+                            name: USER_NAME
+                        });
+                    // console.log('typing');
+                    
+                    clearTimeout(typingTimer);
+                    
+                    typingTimer = setTimeout(() => {
+                        Echo.private(`chat.${conversationId}`)
+                            .whisper('stop-typing', {
+                                user_id: USER_ID
+                            });
+                    }, 1500);
+                });
+
+                Echo.private(`chat.${conversationId}`)
+                    .listenForWhisper('typing', (e) => {
+                        console.log(e);
+                        showTyping(e.name);
+                    })
+                    .listenForWhisper('stop-typing', () => {
+                        hideTyping();
+                    });
+
+
+                let typingTimeout = null;
+
+                function showTyping(name) {
+                    $("#typing-indicator").html(`<p class="text-truncate">is typing<span class='typing-dots'><span>.</span><span>.</span><span>.</span></span></p>`);
+                
+                    clearTimeout(typingTimeout);
+                
+                    typingTimeout = setTimeout(() => {
+                        hideTyping();
+                    }, 2000);
+                }
+
+                function hideTyping() {
+                    $("#typing-indicator").html('');
+                }
+
+                    // function sendMessage() {
+                    //     const input = document.getElementById('message-input');
+                    //     if (!input.value.trim()) return;
+
+                    //      // send message via AJAX...
+
+                    //     input.value = '';
+                    //     hideTyping();
+
+                    //     Echo.private(`chat.${conversationId}`)
+                    //         .whisper('stop-typing', { user_id: USER_ID });
+                    // }
 
 
             });

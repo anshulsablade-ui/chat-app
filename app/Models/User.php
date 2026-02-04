@@ -43,6 +43,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'last_seen' => 'datetime',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -75,6 +76,11 @@ class User extends Authenticatable
     public function messages()
     {
         return $this->hasMany(Message::class);
+    }
+
+        public function lastMessage()
+    {
+        return $this->hasOne(Message::class)->latestOfMany();
     }
 
 }

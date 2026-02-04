@@ -17,16 +17,16 @@ function ajaxCall(url, method, data, successCallback, errorCallback) {
     });
 }
 
-$('body').on('click', '.chatUser', function (e) {
-    e.preventDefault();
-    let url = $(this).attr('href');
-    ajaxCall(url, 'post', null, function (response) {
-        $('.main').html(response);
-    }, function (response) {
-        alert('Error:' + response);
-        // console.log(response);
-    });
-});
+// $('body').on('click', '.chatUser', function (e) {
+//     e.preventDefault();
+//     let url = $(this).attr('href');
+//     ajaxCall(url, 'post', null, function (response) {
+//         $('.main').html(response);
+//     }, function (response) {
+//         alert('Error:' + response);
+//         // console.log(response);
+//     });
+// });
 
 // $("#messageSendForm").submit(function (e) { 
 //     e.preventDefault();

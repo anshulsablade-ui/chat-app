@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamp('last_seen')->nullable();
+            $table->boolean('is_online')->default(false);
             $table->timestamps();
         });
 

@@ -8,6 +8,7 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 
 
 Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
+    // dd($conversationId);
     return true;
 });
 

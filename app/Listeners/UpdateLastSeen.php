@@ -2,64 +2,50 @@
 
 namespace App\Listeners;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+use App\Models\User;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Events\Dispatcher;
-use Illuminate\Support\Facades\Auth;
 
 class UpdateLastSeen
 {
     /**
-     * Create the event listener.
+     * Handle user login.
      */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
-     * Handle user login events.
-     */
-
     public function handleUserLogin(Login $event): void
     {
+        $event->user->forceFill([
+            'is_online' => true,
+            'last_seen' => now(),
+        ])->save();
     }
 
     /**
-     * Handle user logout events.
+     * Handle user logout.
      */
     public function handleUserLogout(Logout $event): void
     {
-        if (Auth::check()) {
-            Auth::user()->update([
-                'last_seen' => now()
-            ]);
+        if ($event->user) {
+            $event->user->forceFill([
+                'is_online' => false,
+                'last_seen' => now(),
+            ])->save();
         }
     }
 
-        /**
-     * Register the listeners for the subscriber.
+    /**
+     * Register event listeners.
      */
     public function subscribe(Dispatcher $events): void
     {
         $events->listen(
             Login::class,
-            [UpdateLastSeen::class, 'handleUserLogin']
+            [self::class, 'handleUserLogin']
         );
- 
+
         $events->listen(
             Logout::class,
-            [UpdateLastSeen::class, 'handleUserLogout']
+            [self::class, 'handleUserLogout']
         );
-    }
-
-    /**
-     * Handle the event.
-     */
-    public function handle(object $event): void
-    {
-        //
     }
 }
