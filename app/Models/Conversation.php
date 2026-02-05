@@ -18,4 +18,14 @@ class Conversation extends Model
     {
         return $this->hasMany(ConversationParticipant::class);
     }
+
+        public function users()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'conversation_participants',
+            'conversation_id',
+            'user_id'
+        );
+    }
 }

@@ -43,9 +43,9 @@
         <!-- Layout -->
         <div class="layout overflow-hidden">
             <!-- Navigation -->
-            {{-- <nav class="navigation d-flex flex-column text-center navbar navbar-light hide-scrollbar">
+            <nav class="navigation d-flex flex-column text-center navbar navbar-light hide-scrollbar">
                 <!-- Brand -->
-                <a href="index-2.html" title="Messenger" class="d-none d-xl-block mb-6">
+                <a href="{{ route('chat.index') }}" title="Messenger" class="d-none d-xl-block mb-6">
                     <svg version="1.1" width="46px" height="46px" fill="currentColor" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 46 46" enable-background="new 0 0 46 46" xml:space="preserve">
                         <polygon opacity="0.7" points="45,11 36,11 35.5,1 "/>
                         <polygon points="35.5,1 25.4,14.1 39,21 "/>
@@ -90,11 +90,11 @@
                     <!-- Chats -->
                     <li class="nav-item">
                         <a class="nav-link active py-0 py-lg-8" id="tab-chats" href="#tab-content-chats" title="Chats" data-bs-toggle="tab" role="tab">
-                            <div class="icon icon-xl icon-badged">
+                            <div class="icon icon-xl icon-badged1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                <div class="badge badge-circle bg-primary">
+                                {{-- <div class="badge badge-circle bg-primary">
                                     <span>4</span>
-                                </div>
+                                </div> --}}
                             </div>
                         </a>
                     </li>
@@ -132,13 +132,17 @@
                     <!-- Profile -->
                     <li class="nav-item d-none d-xl-block">
                         <a href="#" class="nav-link p-0 mt-lg-2" data-bs-toggle="modal" data-bs-target="#modal-profile">
-                            <div class="avatar avatar-online mx-auto">
-                                <img class="avatar-img" src="assets/img/avatars/1.jpg" alt="">
+                            <div class="avatar avatar-online1 mx-auto">
+                                @if (file_exists(auth()->user()->image))
+                                    <img src="{{ auth()->user()->image }}" alt="{{ auth()->user()->name }}" class="avatar-img">
+                                @else
+                                    <span class="avatar-text">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                                @endif
                             </div>
                         </a>
                     </li>
                 </ul>
-            </nav> --}}
+            </nav>
             <!-- Navigation -->
 
             <!-- Sidebar -->
@@ -676,7 +680,7 @@
                                     </div>
 
                                     <!-- Search -->
-                                    {{-- <div class="mb-6">
+                                    <div class="mb-6">
                                         <form action="#">
                                             <div class="input-group">
                                                 <div class="input-group-text">
@@ -685,32 +689,36 @@
                                                     </div>
                                                 </div>
 
-                                                <input type="text" class="form-control form-control-lg ps-0" placeholder="Search messages or users" aria-label="Search for messages or users...">
+                                                <input type="text" class="form-control form-control-lg ps-0" id="search-users" name="search" placeholder="Search" aria-label="Search">
                                             </div>
                                         </form>
-                                    </div> --}}
+                                    </div>
 
                                     <!-- Chats -->
                                     <div class="card-list">
-                                        @foreach ($users as $user)    
+                                        @foreach ($participants as $participant)    
                                         <!-- Card -->
-                                        <a href="{{ route('chat', $user->id) }}" data-conversation-id="" class="card border-0 text-reset chatUser">
-                                            <div class="card-body" id="user-{{ $user->id }}">
+                                        <a href="{{ route('chat', $participant->conversation->id) }}" data-conversation-id="" class="card border-0 text-reset conversationChat">
+                                            <div class="card-body" id="conversation-{{ $participant->conversation->id }}">
                                                 <div class="row gx-5">
                                                     <div class="col-auto">
-                                                        <div class="avatar status avatar-offline">
-                                                            @if ($user->image)
-                                                                <img src="{{ asset('images/users/' . $user->image) }}" alt="{{ $user->name }}" class="avatar-img">
+                                                        <div class="avatar {{ $participant->conversation->type == 'private' ? 'status avatar-offline' : '' }}">
+                                                            @if ($participant->conversation->type == 'group')                                                                
+                                                                <span class="avatar-text">{{ substr($participant->conversation->title, 0, 1) }}</span>
                                                             @else
-                                                                <span class="avatar-text">{{ substr($user->name, 0, 1) }}</span>
+                                                                @if ($participant->conversation->users[0]->image)
+                                                                    <img src="{{ asset('images/users/' . $participant->conversation->users[0]->image) }}" alt="{{ $participant->conversation->users[0]->name }}" class="avatar-img">
+                                                                @else
+                                                                    <span class="avatar-text">{{ substr($participant->conversation->users[0]->name, 0, 1) }}</span>
+                                                                @endif
                                                             @endif
                                                         </div>
                                                     </div>
 
                                                     <div class="col">
                                                         <div class="d-flex align-items-center mb-3">
-                                                            <h5 class="me-auto mb-0">{{ $user->name }}</h5>
-                                                            <span class="text-muted extra-small ms-2">{{ $user->last_seen?->format('H:i A') }}</span>
+                                                            <h5 class="me-auto mb-0">{{ $participant->conversation->type == 'group' ? $participant->conversation->title : $participant->conversation->users[0]->name }}</h5>
+                                                            <span class="text-muted extra-small ms-2">{{ $participant->conversation->type == 'private' ? $participant->conversation->users[0]->last_seen?->format('H:i A') : '' }}</span>
                                                         </div>
 
                                                         {{-- <div class="d-flex align-items-center">
@@ -853,7 +861,11 @@
                                             <div class="row align-items-center gx-5">
                                                 <div class="col-auto">
                                                     <div class="avatar">
-                                                        <img src="assets/img/avatars/1.jpg" alt="#" class="avatar-img">
+                                                        @if (file_exists(auth()->user()->image))
+                                                            <img src="{{ auth()->user()->image }}" alt="{{ auth()->user()->name }}" class="avatar-img">
+                                                        @else
+                                                            <span class="avatar-text">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                                                        @endif
 
                                                         <div class="badge badge-circle bg-secondary border-outline position-absolute bottom-0 end-0">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
@@ -863,11 +875,11 @@
                                                     </div>
                                                 </div>
                                                 <div class="col">
-                                                    <h5>William Pearson</h5>
-                                                    <p>wright@studio.com</p>
+                                                    <h5>{{ auth()->user()->name }}</h5>
+                                                    <p>{{ auth()->user()->email }}</p>
                                                 </div>
                                                 <div class="col-auto">
-                                                    <a href="#" class="text-muted">
+                                                    <a href="{{ route('logout') }}" class="text-muted">
                                                         <div class="icon">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                                                         </div>
@@ -1000,56 +1012,6 @@
                                     </div>
                                     <!-- Security -->
 
-                                    <!-- Notifications -->
-                                    <div class="mt-8">
-                                        <div class="d-flex align-items-center my-4 px-6">
-                                            <small class="text-muted me-auto">Notifications</small>
-                                        </div>
-
-                                        <!-- Accordion -->
-                                        <div class="card border-0">
-                                            <div class="card-body py-2">
-                                                <div class="accordion accordion-flush" id="accordion-notifications">
-
-                                                    <div class="accordion-item">
-                                                        <div class="accordion-header">
-                                                            <div class="row align-items-center">
-                                                                <div class="col">
-                                                                    <h5>Sound</h5>
-                                                                    <p>Enable sound notifications</p>
-                                                                </div>
-                                                                <div class="col-auto">
-                                                                    <div class="form-check form-switch">
-                                                                        <input class="form-check-input" type="checkbox" id="accordion-notifications-check-3">
-                                                                        <label class="form-check-label" for="accordion-notifications-check-3"></label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="accordion-item">
-                                                        <div class="accordion-header">
-                                                            <div class="row align-items-center">
-                                                                <div class="col">
-                                                                    <h5>Browser notifications</h5>
-                                                                    <p>Enable browser notifications</p>
-                                                                </div>
-                                                                <div class="col-auto">
-                                                                    <div class="form-check form-switch">
-                                                                        <input class="form-check-input" type="checkbox" id="accordion-notifications-check-2" checked>
-                                                                        <label class="form-check-label" for="accordion-notifications-check-2"></label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Notifications -->
-
                                 </div>
                             </div>
                         </div>
@@ -1079,7 +1041,7 @@
                     <div class="d-flex flex-column h-100 position-relative">
                         <!-- Chat: Header -->
                         <div class="chat-header border-bottom py-4 py-lg-7">
-                            <div class="row align-items-center">
+                            <div class="row align-items-center" id="chat-header">
 
                                 <!-- Mobile: close -->
                                 <div class="col-2 d-xl-none">
@@ -1096,11 +1058,11 @@
                                         <div class="col-12 col-xl-6">
                                             <div class="row align-items-center gx-5">
                                                 <div class="col-auto">
-                                                    <div class="avatar avatar-offline d-none user-status d-xl-inline-block user-avatar"></div>
+                                                    <div class="avatar avatar-offline d-none user-status d-xl-inline-block conversation-avatar"></div>
                                                 </div>
 
                                                 <div class="col overflow-hidden">
-                                                    <h5 class="text-truncate user-name"></h5>
+                                                    <h5 class="text-truncate conversation-name"></h5>
                                                     <div id="typing-indicator">
                                                         {{-- <p class="text-truncate">is typing<span class='typing-dots'><span>.</span><span>.</span><span>.</span></span></p> --}}
                                                     </div>
@@ -1108,43 +1070,9 @@
                                             </div>
                                         </div>
                                         <!-- Title -->
-
-                                        <!-- Toolbar -->
-                                        <div class="col-xl-6 d-none d-xl-block">
-                                            <div class="row align-items-center justify-content-end gx-6">
-                                                <div class="col-auto">
-                                                    <a href="#" class="icon icon-lg text-muted" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-more" aria-controls="offcanvas-more">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-horizontal"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-                                                    </a>
-                                                </div>
-
-                                                <div class="col-auto">
-                                                    <div class="avatar-group">
-                                                        <a href="#" class="avatar avatar-sm user-avatar" data-bs-toggle="modal" data-bs-target="#modal-user-profile"></a>
-
-                                                        <a href="#" class="avatar avatar-sm" data-bs-toggle="modal" data-bs-target="#modal-profile">
-                                                            @if (file_exists(Auth::user()->image))
-                                                                <img src="{{ Auth::user()->image }}" alt="{{ Auth::user()->name }}" class="avatar-img">
-                                                            @else
-                                                                <span class="avatar-text">{{ substr(Auth::user()->name, 0, 1) }}</span>
-                                                            @endif
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- Toolbar -->
                                     </div>
                                 </div>
                                 <!-- Content -->
-
-                                <!-- Mobile: more -->
-                                <div class="col-2 d-xl-none text-end">
-                                    <a href="#" class="icon icon-lg text-muted" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-more" aria-controls="offcanvas-more">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                                    </a>
-                                </div>
-                                <!-- Mobile: more -->
 
                             </div>
                         </div>
@@ -1293,14 +1221,14 @@
 
                             <div class="profile-body">
                                 <div class="avatar avatar-xl">
-                                    @if (file_exists(Auth::user()->image))
-                                        <img src="{{ Auth::user()->image }}" alt="{{ Auth::user()->name }}" class="avatar-img">
+                                    @if (file_exists(auth()->user()->image))
+                                        <img src="{{ auth()->user()->image }}" alt="{{ auth()->user()->name }}" class="avatar-img">
                                     @else
-                                        <span class="avatar-text">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                        <span class="avatar-text">{{ substr(auth()->user()->name, 0, 1) }}</span>
                                     @endif
                                 </div>
 
-                                <h4 class="mb-1">{{ Auth::user()->name }}</h4>
+                                <h4 class="mb-1">{{ auth()->user()->name }}</h4>
                                 {{-- <p>last seen 5 minutes ago</p> --}}
                             </div>
                         </div>
@@ -1314,7 +1242,7 @@
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
                                         <h5>E-mail</h5>
-                                        <p>{{ Auth::user()->email }}</p>
+                                        <p>{{ auth()->user()->email }}</p>
                                     </div>
 
                                     <div class="col-auto">
@@ -1329,7 +1257,7 @@
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
                                         <h5>Phone</h5>
-                                        <p>{{ Auth::user()->phone ?? '-' }}</p>
+                                        <p>{{ auth()->user()->phone ?? '-' }}</p>
                                     </div>
 
                                     <div class="col-auto">
@@ -1429,7 +1357,7 @@
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
                                         <h5>Phone</h5>
-                                        <p cl></p>
+                                        <p class="user-phone"></p>
                                     </div>
 
                                     <div class="col-auto">
@@ -1445,7 +1373,7 @@
                         <hr class="hr-bold modal-gx-n my-0">
 
                         <!-- List -->
-                        <ul class="list-group list-group-flush">
+                        {{-- <ul class="list-group list-group-flush">
                             <li class="list-group-item">
                                 <div class="row align-items-center gx-6">
                                     <div class="col">
@@ -1461,16 +1389,16 @@
                                     </div>
                                 </div>
                             </li>
-                        </ul>
+                        </ul> --}}
                         <!-- List -->
 
                         <hr class="hr-bold modal-gx-n my-0">
 
                         <!-- List -->
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
+                            {{-- <li class="list-group-item">
                                 <a href="#" class="text-reset">Send Message</a>
-                            </li>
+                            </li> --}}
 
                             <li class="list-group-item">
                                 <a href="#" class="text-danger">Block User</a>
@@ -1560,24 +1488,92 @@
         <script src="{{ asset('assets/js/ajax.js') }}"></script>
 
         <script>
+            $(document).ready(function () {
+
+                $("#search-user").on('input', function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('search-user') }}",
+                        data: { search: $(this).val() },
+                        dataType: "json",
+                        success: function (response) {
+                            
+                        }
+                    });
+                });
+
+                $("#addMembers").click(function (e) { 
+                    e.preventDefault();
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('get-users') }}",
+                        data: "data",
+                        dataType: "json",
+                        success: function (response) {
+                            $.each(response.users, function (user) { 
+                                var content = null ;
+                                var content = `<li class="list-group-item">
+                                                    <div class="row align-items-center gx-5">
+                                                        <div class="col-auto">
+                                                            <div class="avatar ">
+                                                                ${user.image
+                                                                    ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
+                                                                    : `<span class="avatar-text">${user.name?.charAt(0) ?? '?'}</span>`
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        <div class="col">
+                                                            <h5>${user.name}</h5>
+                                                            <p>last seen 3 days ago</p>
+                                                        </div>
+                                                        <div class="col-auto">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" value="" id="id-add-user-user-1">
+                                                                <label class="form-check-label" for="id-add-user-user-1"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <label class="stretched-label" for="id-add-user-user-1"></label>
+                                                </li>`;
+                                content += content;
+                            });
+                            $("#members").html(content);
+                        }
+                    });
+                });
+
+            });
+        </script>
+        <script>
             let conversationId = null;
             let USER_ID = null;
             let USER_NAME = null;
             $(document).ready(function () {
-                $('body').on('click', '.chatUser', function (e) {
+                $('body').on('click', '.conversationChat', function (e) {
                     e.preventDefault();
                     let url = $(this).attr('href');
                     ajaxCall(url, 'post', null, function (response) {
                         $("#mainRemove").remove();
                         $("#messages-content").empty();
                         conversationId = JSON.stringify(response.conversationId);
-                        USER_ID = JSON.stringify(response.user.id);
-                        USER_NAME = JSON.stringify(response.user.name);
-
                         $('#messageSendForm').find('#conversation_id').val(conversationId);
                         joinConversation(conversationId);
+                        
+                        var conversation = JSON.stringify(response.conversation);
 
-                        setUserDetails(response.user);
+                        if (conversation.type == 'group') {
+                            var avatar = `<span class="avatar-text">${conversation?.title?.charAt(0) ?? '?'}</span>`;
+                            var title = conversation.title;
+                        }else {
+                            var avatar = conversation.users[0].image
+                                    ? `<img src="${conversation.users[0].image}" alt="${conversation.users[0].name}" class="avatar-img">`
+                                    : `<span class="avatar-text">${conversation.users[0]?.name?.charAt(0) ?? '?'}</span>`;
+                            var title = conversation.users[0].name;
+                        }
+                        $(".conversation-avatar").html(avatar);
+                        $(".conversation-title").text(title);
+
+
                         $('.main').removeClass('d-none');
                         $.each(response.messages, function (indexInArray, message) {
                             showMessage(message);
@@ -1589,23 +1585,6 @@
                     });
                 });
 
-                function setUserDetails(user) {
-                    $(".user-avatar").html(  
-                        user.image && user.image
-                            ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
-                            : `<span class="avatar-text">${user?.name?.charAt(0) ?? '?'}</span>`
-                    );
-                    $(".user-name").text(user.name);
-                    $(".user-last-seen").text(user.last_seen);
-                    if (user.is_online) {
-                        $(".status").removeClass('avatar-offline');
-                        $(".status").addClass('avatar-online');
-                    } else {
-                        $(".status").removeClass('avatar-online');
-                        $(".status").addClass('avatar-offline');
-                    }
-
-                }
 
 
                 $("#messageSendForm").submit(function (e) {
@@ -1650,7 +1629,7 @@
                 }
 
                 // real time message show
-                const userId = "{{ Auth::user()->id }}";
+                const userId = "{{ auth()->user()->id }}";
 
                 let currentConversationId = null;
 
@@ -1675,7 +1654,7 @@
 
                 function showMessage(message) {
                     let content = `<div class="message ${message.sender_id == userId ? 'message-out' : ''}">
-                                        <a href="#" data-bs-toggle="modal" data-bs-target="#modal-profile" class="avatar avatar-responsive">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#${message.sender_id == userId ? 'profile-modal' : 'modal-user-profile'}" class="avatar avatar-responsive">
                                             ${message.sender && message.sender.image
                                                 ? `<img src="${message.sender.image}" alt="${message.sender.name}" class="avatar-img">`
                                                 : `<span class="avatar-text">${message.sender?.name?.charAt(0) ?? '?'}</span>`

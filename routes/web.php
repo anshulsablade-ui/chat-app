@@ -26,4 +26,7 @@ Route::middleware('login')->group(function () {
 
     Route::post('/chat/{id}', [ChatController::class, 'chat'])->name('chat');
 
+    Route::post('/search-user', [ChatController::class, 'searchUser'])->name('search-user');
+
+    Route::post('/get-users', [ChatController::class, 'getUsers'])->name('get-users');
 });
