@@ -79,7 +79,7 @@
                 <!-- Text -->
                 <div class="text-center mt-8">
                     <p>Don't have an account yet? <a href="{{ route('register') }}">Sign up</a></p>
-                    <p><a href="password-reset.html">Forgot Password?</a></p>
+                    {{-- <p><a href="password-reset.html">Forgot Password?</a></p> --}}
                 </div>
             </div>
         </div> <!-- / .row -->

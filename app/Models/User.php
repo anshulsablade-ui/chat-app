@@ -83,4 +83,9 @@ class User extends Authenticatable
         return $this->hasOne(Message::class)->latestOfMany();
     }
 
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants', 'user_id', 'conversation_id');
+    }
+
 }

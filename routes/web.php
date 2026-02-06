@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ConversationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,4 +30,10 @@ Route::middleware('login')->group(function () {
     Route::post('/search-user', [ChatController::class, 'searchUser'])->name('search-user');
 
     Route::post('/get-users', [ChatController::class, 'getUsers'])->name('get-users');
+
+    // create group conversation
+    Route::post('/create-group', [ConversationController::class, 'createGroup'])->name('create-group');
+
+    // create private conversation
+    Route::post('/create-conversation', [ConversationController::class, 'createConversation'])->name('create-conversation');
 });

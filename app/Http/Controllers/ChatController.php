@@ -18,7 +18,7 @@ class ChatController extends Controller
         $participants = ConversationParticipant::where('user_id', $myId)
             ->with([
                 'conversation.users' => function ($q) use ($myId) {
-                    $q->select('users.id', 'users.name', 'users.image', 'users.is_online', 'users.last_seen')
+                    $q->select('users.id', 'users.name', 'users.email', 'users.image', 'users.is_online', 'users.last_seen')
                         ->where('users.id', '!=', $myId);
                 }
             ])
@@ -37,7 +37,7 @@ class ChatController extends Controller
             })
             ->with([
                 'users' => function ($q) use ($myId) {
-                    $q->select('users.id', 'users.name', 'users.image')->where('users.id', '!=', $myId);
+                    $q->select('users.id', 'users.name', 'users.email', 'users.image')->where('users.id', '!=', $myId);
                 }
             ])
             ->first();
@@ -49,48 +49,12 @@ class ChatController extends Controller
             ->get();
 
         return response()->json([
-            'messages' => $messages, 
-            'conversationId' => $messages[0]->conversation_id, 
+            'messages' => $messages,
+            'conversationId' => $conversation->id,
             'conversation' => $conversation,
             'totalUsers' => $totalUsers
         ]);
     }
-
-    // public function chat($id)
-    // {
-    //     $conversationId = ConversationParticipant::where('user_id', Auth::id())
-    //         ->whereIn(
-    //             'conversation_id',
-    //             ConversationParticipant::where('user_id', $id)->pluck('conversation_id')
-    //         )
-    //         ->value('conversation_id');
-
-    //     if (!$conversationId) {
-    //         abort(404, 'Conversation not found');
-    //     }
-
-    //     $user = User::findOrFail($id);
-
-    //     $user = [
-    //         'id' => $user->id,
-    //         'name' => $user->name,
-    //         'email' => $user->email,
-    //         'phone' => $user->phone,
-    //         'image' => $user->image,
-    //         'last_seen' => $user->is_online ? 'Online' : 'Last seen ' . $user->last_seen?->diffForHumans(),
-    //         'created_at' => $user->created_at,
-    //         'updated_at' => $user->updated_at
-    //     ];
-
-    //     $messages = Message::with('sender:id,name,image')
-    //         ->where('conversation_id', $conversationId)
-    //         ->orderBy('id')
-    //         ->get();
-
-    //     return response()->json(['messages' => $messages, 'conversationId' => $conversationId, 'user' => $user]);
-    //     // return view('component.chat', compact('messages', 'user'))->render();
-    // }
-
 
     public function send(Request $request)
     {
@@ -99,7 +63,6 @@ class ChatController extends Controller
             'conversation_id' => $request->conversation_id,
             'sender_id' => Auth::user()->id,
             'message' => $request->message,
-            'type' => $request->type ?? 'text'
         ]);
 
         $message = Message::with(['sender:id,name,image'])->where('id', $message->id)->first();
@@ -108,25 +71,26 @@ class ChatController extends Controller
         return response()->json(['message' => $message]);
     }
 
-    public function getUsers(Request $request){
-        $users = User::all();
+    public function getUsers(Request $request)
+    {
+
+        $authId = Auth::id();
+
+        $users = User::where('id', '!=', $authId)
+            ->withExists([
+                'conversations as has_conversation' => function ($q) use ($authId) {
+
+                    $q->whereIn('conversations.id', function ($sub) use ($authId) {
+                        $sub->select('conversation_id')
+                            ->from('conversation_participants')
+                            ->where('user_id', $authId);
+                    });
+
+                }
+            ])
+            ->get();
+
         return response()->json($users);
     }
 
-    public function searchUser(Request $request)
-    {
-        $users = User::where('name', 'like', '%' . $request->name . '%')
-            ->where('id', '!=', Auth::id())
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'image' => $user->image,
-                    'last_seen' => $user->is_online ? 'Online' : $user->last_seen?->diffForHumans(),
-                ];
-            });
-        return response()->json($users);
-    }
 }
