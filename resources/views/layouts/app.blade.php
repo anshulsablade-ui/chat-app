@@ -88,13 +88,24 @@
                     </li>
 
                     <!-- Chats -->
-                    <li class="nav-item flex-xl-grow-1">
+                    <li class="nav-item">
                         <a class="nav-link active py-0 py-lg-8" id="tab-chats" href="#tab-content-chats" title="Chats" data-bs-toggle="tab" role="tab">
-                            <div class="icon icon-xl icon-badged1">
+                            <div class="icon icon-xl">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                {{-- <div class="badge badge-circle bg-primary">
-                                    <span>4</span>
-                                </div> --}}
+                            </div>
+                        </a>
+                    </li>
+
+                    <!-- Notification -->
+                    <li class="nav-item flex-xl-grow-1">
+                        <a class="nav-link py-0 py-lg-8" id="tab-notifications" href="#tab-content-notifications" title="Notifications" data-bs-toggle="tab" role="tab">
+                            <div class="icon icon-xl{{ $countNotifications > 0 ? ' icon-badged' : '' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                                @if ($countNotifications > 0)
+                                    <div class="badge badge-circle bg-primary notification-count">
+                                        <span>{{ $countNotifications }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </a>
                     </li>
@@ -297,6 +308,39 @@
                                                     </div>
                                                 </div>
                                             </div><!-- .card-body -->
+
+                                            @if ($participant->conversation->type == 'group')      
+                                            <div class="card-footer">
+                                                <div class="row align-items-center gx-4">
+
+                                                    <div class="col-auto">
+                                                        <div class="avatar-group">
+                                                            <div class="avatar avatar-xs">
+                                                                @if (file_exists(auth()->user()->image))
+                                                                    <img src="{{ auth()->user()->image }}" alt="{{ auth()->user()->name }}" class="avatar-img">
+                                                                @else
+                                                                    <span class="avatar-text">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                                                                @endif
+                                                            </div>
+                                                            @foreach ($participant->conversation->users as $user)
+                                                              <div class="avatar avatar-xs">
+                                                                @if ($user->image)
+                                                                    <img src="{{ asset('images/users/' . $user->image) }}" alt="{{ $user->name }}" class="avatar-img">
+                                                                @else
+                                                                    <span class="avatar-text">{{ substr($user->name, 0, 1) }}</span>
+                                                                @endif
+                                                              </div>
+                                                            @endforeach
+{{-- 
+                                                            <div class="avatar avatar-xs">
+                                                                <span class="avatar-text">+5</span>
+                                                            </div> --}}
+                                                        </div>
+                                                    </div>
+                                                </div><!-- .row -->
+                                            </div>
+                                            @endif
+
                                         </a>
                                         <!-- Card -->
                                         @endforeach
@@ -305,6 +349,21 @@
                                     <!-- Chats -->
                                 </div>
 
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications - Notices -->
+                    <div class="tab-pane fade h-100" id="tab-content-notifications" role="tabpanel">
+                        <div class="d-flex flex-column h-100">
+                            <div class="hide-scrollbar">
+                                <div class="container py-8">
+                                    <!-- Title -->
+                                    <div class="mb-8">
+                                        <h2 class="fw-bold m-0">Notifications</h2>
+                                    </div>
+                                    <div class="card-list"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -337,7 +396,7 @@
 
                                 <!-- Mobile: close -->
                                 <div class="col-2 d-xl-none">
-                                    <a class="icon icon-lg text-muted" href="#" data-toggle-chat="">
+                                    <a class="icon icon-lg text-muted" id="back" href="#" data-toggle-chat="">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                     </a>
                                 </div>
@@ -371,17 +430,13 @@
                         <!-- Chat: Content -->
                         <div class="chat-body hide-scrollbar flex-1 h-100">
                             <div class="chat-body-inner">
-                                <div style="height: 500px;" class="py-6 py-lg-12 overflow-auto hide-scrollbar" id="messages-content"></div>
+                                <div class="py-6 py-lg-12 overflow-auto hide-scrollbar" style="height: 600px" id="messages-content"></div>
                             </div>
                         </div>
                         <!-- Chat: Content -->
 
                         <!-- Chat: Footer -->
                         <div class="chat-footer pb-3 pb-lg-7 position-absolute bottom-0 start-0">
-                            <!-- Chat: Files -->
-                            <div class="dz-preview bg-dark" id="dz-preview-row" data-horizontal-scroll="">
-                            </div>
-                            <!-- Chat: Files -->
 
                             <!-- Chat: Form -->
                             <form id="messageSendForm" class="chat-form rounded-pill bg-dark" data-emoji-form="">
@@ -503,6 +558,8 @@
             </div>
         </div>
 
+        <div class="toast-container position-fixed top-0 end-0 p-5" id="liveToast"></div>
+    
         <!-- Scripts -->
         <script src="{{ asset('assets/js/vendor.js') }}"></script>
         <script src="{{ asset('assets/js/template.js') }}"></script>
@@ -512,7 +569,7 @@
         <script>
             $(document).ready(function () {
 
-                $("#tab-friends").click(function (e) { 
+                $("#tab-friends").click(function (e) {
                     e.preventDefault();
                     $.ajax({
                         type: "POST",
@@ -522,44 +579,44 @@
                             var content = '';
                             $.each(response, function (index, user) {
                                 content += `<div class="card border-0">
-                                                <div class="card-body">
-                                                    <div class="row align-items-center gx-5">
-                                                        <div class="col-auto">
-                                                            <a href="#" class="avatar ">
-                                                             ${user.image
-                                                                 ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
-                                                                 : `<span class="avatar-text">${user.name?.charAt(0) ?? '?'}</span>`
-                                                             }
-                                                            </a>
-                                                        </div>
-                                                        <div class="col">
-                                                            <h5><a href="javascript:void(0);">${user.name}</a></h5>
-                                                            <p>${user.email}</p>
-                                                        </div>
-                                                        ${user.has_conversation == false ? 
-                                                        `<div class="col-auto">
-                                                            <!-- Dropdown -->
-                                                            <div class="dropdown">
-                                                                <a class="icon text-muted" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                                                                </a>
-
-                                                                <ul class="dropdown-menu">
-                                                                    <li><a class="dropdown-item createConversation" data-id="${user.id}" href="javascript:void(0);">Add Chat</a></li>
-                                                                </ul>
+                                                        <div class="card-body">
+                                                            <div class="row align-items-center gx-5">
+                                                                <div class="col-auto">
+                                                                    <a href="#" class="avatar ">
+                                                                     ${user.image
+                                        ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
+                                        : `<span class="avatar-text">${user.name?.charAt(0) ?? '?'}</span>`
+                                    }
+                                                                    </a>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <h5><a href="javascript:void(0);">${user.name}</a></h5>
+                                                                    <p>${user.email}</p>
+                                                                </div>
+                                                                ${user.has_conversation == false ?
+                                        `<div class="col-auto">
+                                                                    <!-- Dropdown -->
+                                                                    <div class="dropdown">
+                                                                        <a class="icon text-muted" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                                                        </a>
+        
+                                                                        <ul class="dropdown-menu">
+                                                                            <li><a class="dropdown-item createConversation" data-id="${user.id}" href="javascript:void(0);">Add Chat</a></li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>` : ''
+                                    }
                                                             </div>
-                                                        </div>` : ''
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>`;
+                                                        </div>
+                                                    </div>`;
                             });
                             $("#tab-content-friends-list").html(content);
                         }
                     });
                 });
 
-                $("#getMember").click(function (e) { 
+                $("#getMember").click(function (e) {
                     e.preventDefault();
                     $.ajax({
                         type: "POST",
@@ -570,37 +627,37 @@
                             var content = '';
                             $.each(response, function (index, user) {
                                 content += `<div class="card border-0 mt-5">
-                                                <div class="card-body">
-                                                    <div class="row align-items-center gx-5">
-                                                        <div class="col-auto">
-                                                            <div class="avatar ">
-                                                             ${user.image
-                                                                 ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
-                                                                 : `<span class="avatar-text">${user.name?.charAt(0) ?? '?'}</span>`
-                                                             }
+                                                        <div class="card-body">
+                                                            <div class="row align-items-center gx-5">
+                                                                <div class="col-auto">
+                                                                    <div class="avatar ">
+                                                                     ${user.image
+                                        ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
+                                        : `<span class="avatar-text">${user.name?.charAt(0) ?? '?'}</span>`
+                                    }
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <h5>${user.name}</h5>
+                                                                    <p>${user.email}</p>
+                                                                </div>
+                                                                <div class="col-auto">
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input userMember" type="checkbox" name="users[]" value="${user.id}" id="id-member-${user.id}">
+                                                                        <label class="form-check-label" for="id-member-${user.id}"></label>
+                                                                    </div>
+                                                                </div>
                                                             </div>
+                                                            <label class="stretched-label" for="id-member-${user.id}"></label>
                                                         </div>
-                                                        <div class="col">
-                                                            <h5>${user.name}</h5>
-                                                            <p>${user.email}</p>
-                                                        </div>
-                                                        <div class="col-auto">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input userMember" type="checkbox" name="users[]" value="${user.id}" id="id-member-${user.id}">
-                                                                <label class="form-check-label" for="id-member-${user.id}"></label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <label class="stretched-label" for="id-member-${user.id}"></label>
-                                                </div>
-                                            </div>`;
+                                                    </div>`;
                             });
                             $("#create-chat-members nav").html(content);
                         }
                     });
                 });
 
-                $("#upload-chat-img").change(function (e) { 
+                $("#upload-chat-img").change(function (e) {
                     e.preventDefault();
                     // image Preview
                     if (this.files && this.files[0]) {
@@ -612,7 +669,7 @@
                     }
                 });
 
-                $("#groupCreate").click(function (e) { 
+                $("#groupCreate").click(function (e) {
                     e.preventDefault();
                     let formData = new FormData();
 
@@ -621,9 +678,9 @@
                     $(".userMember:checked").each(function () {
                         formData.append('users[]', $(this).val());
                     });
-                
+
                     let fileInput = $("#upload-chat-img")[0];
-                
+
                     if (fileInput.files.length > 0) {
                         formData.append('group_image', fileInput.files[0]);
                     }
@@ -653,20 +710,19 @@
         <script>
             $(document).ready(function () {
                 let conversationId = null;
-                let USER_ID = null;
-                let USER_NAME = null;
                 const userId = "{{ auth()->user()->id }}";
 
                 $('body').on('click', '.conversationChat', function (e) {
                     e.preventDefault();
                     let url = $(this).attr('href');
+                    $(".main").addClass("is-visible");
                     ajaxCall(url, 'post', null, function (response) {
                         $("#mainRemove").remove();
                         $("#messages-content").empty();
                         conversationId = JSON.stringify(response.conversationId);
                         $('#messageSendForm').find('#conversation_id').val(conversationId);
                         joinConversation(conversationId);
-                        
+
                         var conversation = response.conversation;
 
                         if (conversation.type == 'group') {
@@ -677,7 +733,7 @@
                             var avatar = conversation.users[0].image
                                 ? `<img src="${conversation.users[0].image}" alt="${conversation.users[0].name}" class="avatar-img">`
                                 : `<span class="avatar-text">${conversation.users[0]?.name?.charAt(0) ?? '?'}</span>`;
-                                
+
                             var title = conversation.users[0].name;
                             $(".conversation-email").text(conversation.users[0].email);
                         }
@@ -685,12 +741,58 @@
                         $(".conversation-name").text(title);
 
                         $('.main').removeClass('d-none');
-                        $.each(response.messages, function (indexInArray, message) {
-                            showMessage(message);
+                        if (response.messages.length) {
+                            if ($("#noMessages").length) {
+                                $("#messages-content").removeClass("d-none");
+                                $("#messages-content").parent().removeClass("h-100");
+                                $("#noMessages").remove();
+                            }
+                            
+                            $.each(response.messages, function (indexInArray, message) {
+                                showMessage(message);
+                            });
+                            scrollToBottom(true, true);
+                        } else {
+                            let content = `<div class="d-flex flex-column h-100 justify-content-center" id="noMessages">
+                                    <div class="text-center mb-6">
+                                        <span class="icon icon-xl text-muted">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                        </span>
+                                    </div>
+                                    <p class="text-center text-muted">No messages yet, <br> start the conversation!</p>
+                                </div>`;
+
+                            $("#messages-content").addClass("d-none");
+                            $("#messages-content").parent().addClass("h-100");
+                            $("#messages-content").after(content);
+                        }
+                        
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ route('clear-notifications-for-conversation') }}",
+                            data: {conversation_id:  conversationId},
+                            success: function (response) {
+                                if (response.total_notifications) {
+                                    if ($(".notification-count").length) {
+                                        $(".notification-count span").text(response.total_notifications);
+                                    } else {
+                                        $("#tab-notifications div").addClass("icon-badged").append(`<div class="badge badge-circle bg-primary notification-count"><span>${response.total_notifications}</span></div>`);
+                                    }
+                                } else {
+                                    $("#tab-notifications div").removeClass("icon-badged");
+                                    $(".notification-count").remove();
+                                }
+                                
+                            }
                         });
                     }, function (response) {
                         alert('Error:' + response);
                     });
+                });
+
+                $("#back").click(function (e) { 
+                    e.preventDefault();
+                    $(".main").removeClass("is-visible");
                 });
 
                 // create conversation
@@ -712,7 +814,7 @@
                 $("#messageSendForm").submit(function (e) {
                     e.preventDefault();
                     let formData = new FormData(this);
-                    hideTyping();
+
                     $(this).find('#message').val('');
                     $.ajax({
                         type: "POST",
@@ -721,12 +823,17 @@
                         processData: false,
                         contentType: false,
                         success: function (response) {
+                            if ($("#noMessages").length) {
+                                $("#messages-content").removeClass("d-none");
+                                $("#messages-content").parent().removeClass("h-100");
+                                $("#noMessages").remove();
+                            }
                             showMessage(response.message);
                         }
                     });
                 });
 
-
+                // real time user status
                 Echo.join('online')
                     .here((users) => {
                         users.forEach(user => setOnline(user.id));
@@ -739,14 +846,114 @@
                     });
 
                 function setOnline(user_id) {
-                    $(`#user-${user_id} .status`).removeClass('avatar-offline');
-                    $(`#user-${user_id} .status`).addClass('avatar-online');
+                    $(`#user-${user_id} .status`).removeClass('avatar-offline').addClass('avatar-online');
                 }
 
                 function setOffline(user_id) {
-                    $(`#user-${user_id} .status`).removeClass('avatar-online');
-                    $(`#user-${user_id} .status`).addClass('avatar-offline');
+                    $(`#user-${user_id} .status`).removeClass('avatar-online').addClass('avatar-offline');
                 }
+
+                // notification ----------------------------------------------------------------------
+                Echo.private(`App.Models.User.${userId}`)
+                    .notification((notification) => {
+                        if (notification.conversation_id != currentConversationId) {
+                            showNotification(notification);
+                            increaseUnreadCounter(notification);
+                        }
+                    });
+
+                function increaseUnreadCounter(notification) {
+                    if ($(".notification-count").length) {
+                        $(".notification-count span").text(notification.total_notifications);
+                    } else {
+                        $("#tab-notifications div").addClass("icon-badged").append(`<div class="badge badge-circle bg-primary notification-count"><span>${notification.total_notifications}</span></div>`);
+                    }
+                }
+
+                // Real-Time Show Notification
+                function showNotification(notification) {
+                    let content = `<div class="toast fade show" style="width: 400px" role="alert" aria-live="assertive" aria-atomic="true">
+                                            <div class="toast-header justify-content-between">
+                                                <a href="/chat/${notification.conversation_id}" class="d-flex align-items-center conversationChat">
+                                                    <div class="avatar avatar-xs me-4">
+                                                        ${notification.sender_image ? `<img src="${notification.sender_image}" alt="${notification.sender_name}" class="avatar-img">`
+                                                            : `<span class="avatar-text">${notification.sender_name?.charAt(0) ?? '?'}</span>`}
+                                                    </div>
+                                                    <h6 class="me-auto">${notification.sender_name}</h6>
+                                                </a>
+                                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                                            </div>
+                                            <div class="toast-body" style="max-width: 400px">
+                                                <a href="/chat/${notification.conversation_id}" class="conversationChat"><p class="text-truncate" style="color: black">${notification.message}</p></a>
+                                            </div>
+                                        </div>`;
+                    $("#liveToast").html(content);
+
+                    // remove toast after 10 seconds 
+                    setTimeout(() => {
+                        $('.toast.show').remove();
+                    }, 10000);
+                    // $(`#conversation-${notification.conversation_id}`).addClass('unread');
+                    // $(`#conversation-${notification.conversation_id} .unread-count`).text(notification.count);
+                }
+
+                // get notifications
+                $("#tab-notifications").click(function (e) { 
+                    e.preventDefault();
+                    $.get("{{ route('get-notifications') }}", function (response) {
+    
+                        let container = $("#tab-content-notifications .card-list");
+                        container.empty();
+    
+                        if (!response || response.length === 0) {
+                            container.html(`<div class="text-center py-5 text-muted">No notifications</div>`);
+                            return;
+                        }
+    
+                        if (response.length > 0) {
+                            container.append(`<div class="d-flex align-items-center my-4 px-6"><a href="{{ route('clear-notifications') }}" class="text-muted small">Clear all</a></div>`);
+                        }
+                        let content = '';
+    
+                        $.each(response, function (index, notification) {
+    
+                            let time = formatTime(notification.created_at);
+
+                            let avatar;
+                            if (notification.data.conversation_name == null) {
+                                avatar = notification.data.sender_image ? `<img src="${notification.data.sender_image}" alt="${notification.data.sender_name}" class="avatar-img">`
+                                                            : `<span class="avatar-text">${notification.data.sender_name?.charAt(0) ?? '?'}</span>`;
+                            } else {
+                                avatar = `<span class="avatar-text">${notification.data.conversation_name?.charAt(0) ?? '?'}</span>`;
+                            }
+    
+                            content += `<a href="/chat/${notification.data.conversation_id}" class="card border-0 text-reset conversationChat">
+                                            <div class="card-body">
+                                                <div class="row gx-5">
+                                                    <div class="col-auto">
+                                                        <div class="avatar">${avatar}</div>
+                                                    </div>
+                                                    <div class="col">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <h5 class="me-auto mb-0">${notification.data.conversation_name ?? notification.data.sender_name}</h5>
+                                                            <span class="text-muted extra-small ms-2">${time}</span>
+                                                        </div>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="line-clamp me-auto">${notification.data.message}</div>
+                                                            ${notification.count > 0 ? `<div class="badge badge-circle bg-primary ms-5"><span>${notification.count}</span></div>`: ''}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>`;
+                            });
+    
+                        container.append(content);
+                    });
+                });
+
+                // end notification ----------------------------------------------------------------------
+
 
                 // real time message show
                 let currentConversationId = null;
@@ -761,34 +968,36 @@
 
                     Echo.private(`chat.${conversationId}`)
                         .listen('.message.sent', (e) => {
+                            if ($("#noMessages").length) {
+                                $("#messages-content").removeClass("d-none");
+                                $("#messages-content").parent().removeClass("h-100");
+                                $("#noMessages").remove();
+                            }                            
                             showMessage(e);
                         });
                 }
 
                 function showMessage(message) {
                     let content = `<div class="message ${message.sender_id == userId ? 'message-out' : ''}">
-                                        <a href="#" class="avatar avatar-responsive">
-                                            ${message.sender && message.sender.image
-                                                ? `<img src="${message.sender.image}" alt="${message.sender.name}" class="avatar-img">`
-                                                : `<span class="avatar-text">${message.sender?.name?.charAt(0) ?? '?'}</span>`}
-                                        </a>
-                                        <div class="message-inner">
-                                            <div class="message-body">
-                                                <div class="message-content">
-                                                    <div class="message-text"><p>${message.message}</p></div>
+                                                <a href="#" class="avatar avatar-responsive">
+                                                    ${message.sender && message.sender.image
+                                                        ? `<img src="${message.sender.image}" alt="${message.sender.name}" class="avatar-img">`
+                                                        : `<span class="avatar-text">${message.sender?.name?.charAt(0) ?? '?'}</span>`}
+                                                </a>
+                                                <div class="message-inner">
+                                                    <div class="message-body">
+                                                        <div class="message-content">
+                                                            <div class="message-text"><p>${message.message}</p></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="message-footer">
+                                                        <span class="extra-small text-muted">${formatTime(message.created_at)}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="message-footer">
-                                                <span class="extra-small text-muted">${formatTime(message.created_at)}</span>
-                                            </div>
-                                        </div>
-                                    </div>`;
-                    const shouldScroll = isUserAtBottom();
+                                            </div>`;
 
                     $("#messages-content").append(content);
-                    if (shouldScroll) {
-                        scrollToBottomSmooth();
-                    }
+                    scrollToBottom(false, true);
                 }
 
                 function formatTime(datetime) {
@@ -803,37 +1012,22 @@
                     });
                 }
 
-                scrollToBottom();
-
-                $("#messages-content").on("scroll", function () {
-                    if ($(this).scrollTop() === 0) {
-                        loadOlderMessages();
-                    }
-                });
-
             });
 
-                function scrollToBottom() {
-                    const $chat = $("#messages-content");
-                    $chat.scrollTop($chat[0].scrollHeight);
-                }
 
-                function scrollToBottomSmooth() {
-                    const $chat = $("#messages-content");
-                    $chat.animate(
-                        { scrollTop: $chat[0].scrollHeight },
-                        300
-                    );
+            function scrollToBottom(force = false, smooth = true) {
+                const el = document.getElementById('messages-content');
+                if (!el) return;
+            
+                const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+            
+                if (force || nearBottom) {
+                    el.scrollTo({
+                        top: el.scrollHeight,
+                        behavior: smooth ? 'smooth' : 'auto'
+                    });
                 }
-
-                function isUserAtBottom() {
-                    const $chat = $("#messages-content");
-                    return (
-                        $chat[0].scrollHeight -
-                        $chat.scrollTop() -
-                        $chat.outerHeight()
-                    ) < 50;
-                }
+            }
 
         </script>
     </body>

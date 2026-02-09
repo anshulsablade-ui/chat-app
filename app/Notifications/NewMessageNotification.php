@@ -2,53 +2,61 @@
 
 namespace App\Notifications;
 
+use App\Models\Conversation;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 
 class NewMessageNotification extends Notification
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct()
+    public $message;
+    public function __construct($message)
     {
-        //
+        $this->message = $message;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
+    public function via($notifiable)
     {
-        return ['mail'];
+        return ['database', 'broadcast'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
+    public function toDatabase($notifiable)
     {
-        return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
-    }
-
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
-    {
+        $conversation = Conversation::where('id', $this->message->conversation_id)->first();
         return [
-            //
+            'conversation_id' => $this->message->conversation_id,
+            'sender_id' => $this->message->sender_id,
+            'sender_name' => $this->message->sender->name,
+            'sender_image' => $this->message->sender->image,
+            'conversation_name' => $conversation->title ?? null,
+            'message' => $this->message->message,
         ];
+    }
+
+    public function toBroadcast($notifiable)
+    {
+        $conversation = Conversation::where('id', $this->message->conversation_id)->first();
+        $count = DB::table('notifications')
+            ->where('notifiable_id', $notifiable->id)
+            ->where('notifiable_type', get_class($notifiable))
+            ->whereNull('read_at')
+            ->where('data->conversation_id', $this->message->conversation_id)
+            ->count();
+            
+        return new BroadcastMessage([
+            'conversation_id' => $this->message->conversation_id,
+            'sender_id' => $this->message->sender_id,
+            'sender_name' => $this->message->sender->name,
+            'sender_image' => $this->message->sender->image,
+            'conversation_name' => $conversation->title ?? null,
+            'message' => $this->message->message,
+            'total_notifications' => $count,
+        ]);
     }
 }

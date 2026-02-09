@@ -100,6 +100,8 @@
                         window.location.href = "{{ route('chat.index') }}";
                     }
                 }, function (error) {
+                    $("is-invalid").removeClass('is-invalid');
+                    $(".invalid-feedback").remove();
                     var errors = JSON.parse(error.responseText);
                     $.each(errors.message, function (key, value) { 
                          $(`#${key}`).addClass('is-invalid').after(`<div class="invalid-feedback">${value}</div>`);

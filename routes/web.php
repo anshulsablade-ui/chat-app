@@ -36,4 +36,13 @@ Route::middleware('login')->group(function () {
 
     // create private conversation
     Route::post('/create-conversation', [ConversationController::class, 'createConversation'])->name('create-conversation');
+    
+    // get notifications
+    Route::get('/get-notifications', [ChatController::class, 'getNotifications'])->name('get-notifications');
+
+    // clear notifications
+    Route::get('/clear-notifications', [ChatController::class, 'clearNotifications'])->name('clear-notifications');
+
+    // clear notifications for conversation
+    Route::post('/clear-notifications-for-conversation', [ChatController::class, 'clearNotificationsForConversation'])->name('clear-notifications-for-conversation');
 });
