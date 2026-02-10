@@ -14,21 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class ChatController extends Controller
 {
-    // public function index()
-    // {
-    //     $myId = Auth::id();
-    //     $participants = ConversationParticipant::where('user_id', $myId)
-    //         ->with([
-    //             'conversation.users' => function ($q) use ($myId) {
-    //                 $q->select('users.id', 'users.name', 'users.email', 'users.image', 'users.is_online', 'users.last_seen')
-    //                     ->where('users.id', '!=', $myId);
-    //             }
-    //         ])
-    //         ->get();
-    //     $countNotifications = auth()->user()->unreadNotifications()->count();
-
-    //     return view('layouts.app', compact('participants', 'countNotifications'));
-    // }
     public function index()
     {
         $myId = Auth::id();
@@ -41,12 +26,8 @@ class ChatController extends Controller
                 }
             ])
             ->get();
-dd($participants->toArray());
-        $countNotifications = auth()->user()
-            ->unreadNotifications
-            ->pluck('data.conversation_id')
-            ->unique()
-            ->count();
+
+        $countNotifications = auth()->user()->unreadNotifications->pluck('data.conversation_id')->unique()->count();
 
         return view('layouts.app', compact('participants', 'countNotifications'));
     }
@@ -111,7 +92,7 @@ dd($participants->toArray());
             ->withExists([
                 'conversations as has_conversation' => function ($q) use ($authId) {
 
-                    $q->whereIn('conversations.id', function ($sub) use ($authId) {
+                    $q->where('type', 'private')->whereIn('conversations.id', function ($sub) use ($authId) {
                         $sub->select('conversation_id')
                             ->from('conversation_participants')
                             ->where('user_id', $authId);
@@ -120,7 +101,7 @@ dd($participants->toArray());
                 }
             ])
             ->get();
-
+            
         return response()->json($users);
     }
 
@@ -165,7 +146,6 @@ dd($participants->toArray());
                 ];
             });
 
-        // dd($notifications);
         return response()->json($notifications);
     }
 

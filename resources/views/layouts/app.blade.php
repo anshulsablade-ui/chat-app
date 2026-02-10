@@ -576,6 +576,10 @@
                         url: "{{ route('get-users') }}",
                         dataType: "json",
                         success: function (response) {
+                            if (!response || response.length === 0) {
+                                $("#tab-content-friends-list").html(`<div class="text-center py-5 text-muted">No friends</div>`);
+                                return;
+                            }                            
                             var content = '';
                             $.each(response, function (index, user) {
                                 content += `<div class="card border-0">
@@ -584,9 +588,9 @@
                                                                 <div class="col-auto">
                                                                     <a href="#" class="avatar ">
                                                                      ${user.image
-                                        ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
-                                        : `<span class="avatar-text">${user.name?.charAt(0) ?? '?'}</span>`
-                                    }
+                                                                            ? `<img src="${user.image}" alt="${user.name}" class="avatar-img">`
+                                                                            : `<span class="avatar-text">${user.name?.charAt(0) ?? '?'}</span>`
+                                                                        }
                                                                     </a>
                                                                 </div>
                                                                 <div class="col">
@@ -594,7 +598,7 @@
                                                                     <p>${user.email}</p>
                                                                 </div>
                                                                 ${user.has_conversation == false ?
-                                        `<div class="col-auto">
+                                                                    `<div class="col-auto">
                                                                     <!-- Dropdown -->
                                                                     <div class="dropdown">
                                                                         <a class="icon text-muted" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -605,8 +609,7 @@
                                                                             <li><a class="dropdown-item createConversation" data-id="${user.id}" href="javascript:void(0);">Add Chat</a></li>
                                                                         </ul>
                                                                     </div>
-                                                                </div>` : ''
-                                    }
+                                                                </div>` : ''}
                                                             </div>
                                                         </div>
                                                     </div>`;
@@ -893,8 +896,6 @@
                     setTimeout(() => {
                         $('.toast.show').remove();
                     }, 10000);
-                    // $(`#conversation-${notification.conversation_id}`).addClass('unread');
-                    // $(`#conversation-${notification.conversation_id} .unread-count`).text(notification.count);
                 }
 
                 // get notifications
