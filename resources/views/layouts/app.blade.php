@@ -456,7 +456,7 @@
                                     </div>
 
                                     <div class="col-auto">
-                                        <button class="btn btn-icon btn-primary rounded-circle ms-5">
+                                        <button class="btn btn-icon btn-primary rounded-circle ms-5" id="submitBtn">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                         </button>
                                     </div>
@@ -721,7 +721,9 @@
                     $(".main").addClass("is-visible");
                     ajaxCall(url, 'post', null, function (response) {
                         $("#mainRemove").remove();
-                        $("#messages-content").empty();
+                        $("#messages-content").empty();        
+                        $('#message').val('').css('height', '45px');
+                        $("#submitBtn").prop('disabled', true);
                         conversationId = JSON.stringify(response.conversationId);
                         $('#messageSendForm').find('#conversation_id').val(conversationId);
                         joinConversation(conversationId);
@@ -744,32 +746,34 @@
                         $(".conversation-name").text(title);
 
                         $('.main').removeClass('d-none');
+                        
+                        if ($("#noMessages").length) {
+                            $("#messages-content").removeClass("d-none");
+                            $("#messages-content").parent().removeClass("h-100");
+                            $("#noMessages").remove();
+                        }
                         if (response.messages.length) {
-                            if ($("#noMessages").length) {
-                                $("#messages-content").removeClass("d-none");
-                                $("#messages-content").parent().removeClass("h-100");
-                                $("#noMessages").remove();
-                            }
                             
                             $.each(response.messages, function (indexInArray, message) {
                                 showMessage(message);
                             });
+
                             scrollToBottom(true, true);
                         } else {
                             let content = `<div class="d-flex flex-column h-100 justify-content-center" id="noMessages">
-                                    <div class="text-center mb-6">
-                                        <span class="icon icon-xl text-muted">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                        </span>
-                                    </div>
-                                    <p class="text-center text-muted">No messages yet, <br> start the conversation!</p>
-                                </div>`;
+                                            <div class="text-center mb-6">
+                                                <span class="icon icon-xl text-muted">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                                </span>
+                                            </div>
+                                            <p class="text-center text-muted">No messages yet, <br> start the conversation!</p>
+                                        </div>`;
 
                             $("#messages-content").addClass("d-none");
                             $("#messages-content").parent().addClass("h-100");
                             $("#messages-content").after(content);
                         }
-                        
+
                         $.ajax({
                             type: "POST",
                             url: "{{ route('clear-notifications-for-conversation') }}",
@@ -818,7 +822,8 @@
                     e.preventDefault();
                     let formData = new FormData(this);
 
-                    $(this).find('#message').val('');
+                    $(this).find('#message').val('').css('height', '45px');
+                    $("#submitBtn").prop('disabled', true);
                     $.ajax({
                         type: "POST",
                         url: "{{ route('chat.send') }}",
@@ -834,6 +839,19 @@
                             showMessage(response.message);
                         }
                     });
+                });
+
+                // disable submit button
+                var $submitBtn = $('#submitBtn');
+                $submitBtn.prop('disabled', true);
+
+                $('#message').on('input change keyup', function() {
+                    var textareaValue = $(this).val().trim();
+                    $submitBtn.prop('disabled', (textareaValue.length === 0));
+                });
+                $('body').on('click', ".emoji-picker__emoji",  function () {
+                    var textareaValue = $('#message').val().trim();
+                    $submitBtn.prop('disabled', (textareaValue.length === 0));
                 });
 
                 // real time user status
@@ -988,7 +1006,7 @@
                                                 <div class="message-inner">
                                                     <div class="message-body">
                                                         <div class="message-content">
-                                                            <div class="message-text"><p>${message.message}</p></div>
+                                                            <div class="message-text"><p style="overflow-wrap: anywhere;">${message.message}</p></div>
                                                         </div>
                                                     </div>
                                                     <div class="message-footer">
